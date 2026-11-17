@@ -2,10 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -71,36 +69,9 @@ func setupRoutes() *http.ServeMux {
 	return mux
 }
 
-// privateIPv4 returns the first non-loopback private IPv4 address of this host.
-func privateIPv4() (string, error) {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return "", err
-	}
-	for _, a := range addrs {
-		ipNet, ok := a.(*net.IPNet)
-		if !ok || ipNet.IP.IsLoopback() {
-			continue
-		}
-		if ip4 := ipNet.IP.To4(); ip4 != nil && ip4.IsPrivate() {
-			return ip4.String(), nil
-		}
-	}
-	return "", errors.New("no private IPv4 address found")
-}
-
 func main() {
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = "127.0.0.1"
-	}
-	if host == "auto" {
-		ip, err := privateIPv4()
-		if err != nil {
-			log.Fatalf("Cannot resolve HOST=auto: %v", err)
-		}
-		host = ip
-	}
+	// Render requires web services to bind to 0.0.0.0.
+	const host = "0.0.0.0"
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
